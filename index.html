@@ -31,6 +31,50 @@
 				<div class="col-md-6">
 					<div id="map"></div>
 						<script>
+						var latitudeData = [];
+						$(document).on("ready", function() {
+						  $.ajax({
+						    method: 'GET',
+						    url: weekly_quakes_endpoint,
+						    success: postQuakes
+						  });
+						  initMap();
+						});
+						  function postQuakes(json){
+								latitudeData.push(json.features);
+								console.log(latitudeData);
+						    var source = $('#quake-template').html();
+						    var template = Handlebars.compile(source);
+						    var quakeHtml = template({results: json.features})
+						    $('#info').append(quakeHtml);
+						  }
+						function initMap() {
+							var map = new google.maps.Map(document.getElementById('map'), {zoom: 2});
+							var geocoder = new google.maps.Geocoder;
+							geocoder.geocode({'address': 'San Francisco'}, function(results, status) {
+
+								if (status === 'OK') {
+									map.setCenter(results[0].geometry.location);
+									for (var i = 0; i < latitudeData[0].length; i++){
+										console.log(latitudeData[0][i].geometry.coordinates[0]);
+										var latitude = latitudeData[0][i].geometry.coordinates[1];
+										var longitude = latitudeData[0][i].geometry.coordinates[0];
+										var myLatLng = {lat: latitude, lng: longitude};
+										new google.maps.Marker({
+										map: map,
+										position: myLatLng
+									});}
+								} else {
+									window.alert('Geocode was not successful for the following reason: ' +
+											status);
+								}
+							});
+						}
+						var weekly_quakes_endpoint = "http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson";
+						var $quakesList;
+						var map;
+						var template;
+
 
 						</script>
 						<script async defer
